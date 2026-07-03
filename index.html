@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Libreta de Préstamo</title>
+<meta name="theme-color" content="#12292E">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="Préstamo">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: #EFF2F1; color: #12292E;
+    font-family: 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding-bottom: 40px;
+  }
+  input, select { max-width: 100%; min-width: 0; font-family: inherit; }
+  input[type="date"] {
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; max-width: 100%; width: 100%;
+    text-align: left; background: #FBFDFC;
+  }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+  input:focus, button:focus, select:focus { outline: 2px solid #1F7A5C; outline-offset: 1px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  header { background: #12292E; color: #E8F3EE; padding: 28px 20px 24px; }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; color: #6FBF9B; font-weight: 700; margin-bottom: 8px; }
+  h1 { margin: 0; font-size: 24px; font-weight: 800; line-height: 1.2; }
+  .subtitulo { margin: 8px 0 0; font-size: 13.5px; color: #A9C6BC; line-height: 1.5; }
+
+  .card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    margin: 14px 14px 0; box-shadow: 0 1px 3px rgba(18,41,46,.08);
+  }
+  .card-titulo {
+    font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: #5A7570; margin-bottom: 12px;
+  }
+  .grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; margin-bottom: 10px; }
+  .grid-pago { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.35fr); gap: 10px; margin-bottom: 12px; }
+  label { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: #3B5450; min-width: 0; }
+  .input {
+    padding: 10px 12px; border-radius: 10px; border: 1.5px solid #CBD8D4;
+    font-size: 16px; font-variant-numeric: tabular-nums; background: #FBFDFC; width: 100%;
+  }
+  .input-fecha {
+    padding: 12px 10px; border-radius: 10px; border: 1.5px solid #CBD8D4;
+    font-size: 14px; background: #FBFDFC; width: 100%; min-height: 48px; color: #12292E;
+  }
+  .input-valor {
+    padding: 10px 12px; border-radius: 10px; border: 1.5px solid #1F7A5C;
+    font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums;
+    background: #FBFDFC; width: 100%; min-height: 48px; color: #12292E;
+  }
+
+  .resumen { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
+  .resumen-item { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 3px rgba(18,41,46,.08); }
+  .resumen-total { grid-column: 1 / -1; background: linear-gradient(120deg, #1F7A5C, #145743); }
+  .resumen-label {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: #5A7570; margin-bottom: 4px;
+  }
+  .resumen-valor { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .resumen-nota { font-size: 11.5px; color: #BFE3D3; margin-top: 4px; line-height: 1.4; }
+
+  .btn-primario {
+    background: #1F7A5C; color: #fff; border: none; border-radius: 10px;
+    padding: 11px 18px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%;
+    font-family: inherit;
+  }
+  .btn-secundario {
+    background: transparent; color: #1F7A5C; border: 1.5px solid #9FC5B6;
+    border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    cursor: pointer; width: 100%; font-family: inherit;
+  }
+  .btn-peligro {
+    margin-top: 12px; background: transparent; color: #A33B2E;
+    border: 1.5px solid #E0BDB7; border-radius: 10px; padding: 8px 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; font-family: inherit;
+  }
+  .btn-borrar { background: transparent; border: none; color: #A33B2E; cursor: pointer; font-size: 14px; padding: 4px; }
+  .btn-enlace {
+    background: none; border: none; color: #1F7A5C; font-size: 13px;
+    font-weight: 600; cursor: pointer; text-decoration: underline; font-family: inherit;
+    padding: 8px;
+  }
+
+  .tabla-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th {
+    padding: 8px; border-bottom: 2px solid #12292E; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: .05em; color: #3B5450; white-space: nowrap; text-align: left;
+  }
+  th.num { text-align: right; }
+  td { padding: 9px 8px; border-bottom: 1px solid #E3EAE7; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:nth-child(even) { background: #F6F9F8; }
+  .interes { color: #C97E12; }
+  .fuerte { font-weight: 700; }
+  .periodo { font-size: 12.5px; color: #5A7570; }
+  .input-tabla {
+    width: 110px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid #CBD8D4;
+    font-size: 14px; font-variant-numeric: tabular-nums; text-align: right;
+  }
+  .input-fecha-tabla {
+    padding: 6px 8px; border-radius: 8px; border: 1.5px solid #CBD8D4;
+    font-size: 13px; width: 125px; min-height: 34px; background: #FBFDFC;
+  }
+  .totales { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; margin-top: 12px; font-size: 13.5px; }
+  footer { text-align: center; font-size: 12px; color: #7A928C; margin-top: 18px; padding: 0 14px; line-height: 1.5; }
+  .oculto { display: none !important; }
+
+  /* ── Pantallas de bloqueo y configuración ── */
+  .pantalla {
+    position: fixed; inset: 0; z-index: 100;
+    background: #12292E; color: #E8F3EE;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .pantalla .icono { font-size: 52px; margin-bottom: 14px; }
+  .pantalla h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
+  .pantalla p { margin: 0 0 20px; font-size: 14px; color: #A9C6BC; line-height: 1.5; max-width: 320px; }
+  .pantalla .caja { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+  .pantalla input {
+    padding: 13px 14px; border-radius: 10px; border: 1.5px solid #3B5450;
+    font-size: 17px; background: #1A3A42; color: #fff; width: 100%; text-align: center;
+  }
+  .pantalla input::placeholder { color: #5A7570; }
+  .pantalla .error { color: #F0A898; font-size: 13px; min-height: 18px; margin: 0; }
+  .estado-sync { font-weight: 600; }
+  .sync-ok { color: #1F7A5C; }
+  .sync-off { color: #C97E12; }
+</style>
+</head>
+<body>
+
+<!-- ── Pantalla 1: primera vez, elegir/escribir la clave ── -->
+<div class="pantalla oculto" id="pantallaClave">
+  <div class="icono">🔑</div>
+  <h2>Clave de sincronización</h2>
+  <p>Escribe la clave de tu libreta. Si es la primera vez, inventa una (mínimo 8 caracteres) y usa <strong>la misma</strong> en el otro celular para compartir los datos.</p>
+  <div class="caja">
+    <input type="password" id="inputClave" placeholder="Tu clave secreta" autocomplete="off">
+    <p class="error" id="errorClave"></p>
+    <button class="btn-primario" id="btnConectar">Conectar</button>
+  </div>
+</div>
+
+<!-- ── Pantalla 2: ofrecer Face ID / huella ── -->
+<div class="pantalla oculto" id="pantallaOfrecerBio">
+  <div class="icono">🔒</div>
+  <h2>¿Bloquear con Face ID o huella?</h2>
+  <p>Cada vez que abras la app te pedirá tu Face ID (iPhone) o tu huella (Samsung) antes de mostrar los números.</p>
+  <div class="caja">
+    <button class="btn-primario" id="btnActivarBio">Sí, activar</button>
+    <button class="btn-enlace" id="btnSaltarBio">Ahora no</button>
+    <p class="error" id="errorBio"></p>
+  </div>
+</div>
+
+<!-- ── Pantalla 3: desbloqueo ── -->
+<div class="pantalla oculto" id="pantallaBloqueo">
+  <div class="icono">🔐</div>
+  <h2>Libreta bloqueada</h2>
+  <p>Usa tu Face ID o tu huella para entrar.</p>
+  <div class="caja">
+    <button class="btn-primario" id="btnDesbloquear">Desbloquear</button>
+    <button class="btn-enlace" id="btnUsarClave">Entrar con la clave</button>
+    <input type="password" id="inputClaveDesbloqueo" class="oculto" placeholder="Tu clave secreta" autocomplete="off">
+    <p class="error" id="errorBloqueo"></p>
+  </div>
+</div>
+
+<header>
+  <div class="eyebrow">LIBRETA DE PRÉSTAMO</div>
+  <h1>Cuenta con interés por días exactos</h1>
+  <p class="subtitulo" id="subtitulo"></p>
+</header>
+
+<section class="card">
+  <div class="card-titulo">Datos del préstamo</div>
+  <div class="grid2">
+    <label>Monto prestado
+      <input type="text" inputmode="numeric" id="monto" class="input">
+    </label>
+    <label>Tasa mensual (%)
+      <input type="number" step="0.1" min="0" id="tasa" class="input">
+    </label>
+  </div>
+  <label>Fecha en que te hicieron el préstamo
+    <input type="date" id="fechaPrestamo" class="input-fecha">
+  </label>
+</section>
+
+<section class="resumen">
+  <div class="resumen-item">
+    <div class="resumen-label">Capital pendiente</div>
+    <div class="resumen-valor" id="capitalPendiente"></div>
+  </div>
+  <div class="resumen-item">
+    <div class="resumen-label interes">Interés ya causado</div>
+    <div class="resumen-valor interes" id="interesCausado"></div>
+  </div>
+  <div class="resumen-item resumen-total">
+    <div class="resumen-label" style="color:#E8F3EE">Total para quedar a paz y salvo HOY</div>
+    <div class="resumen-valor" style="color:#fff;font-size:26px" id="totalHoy"></div>
+    <div class="resumen-nota" id="notaHoy"></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-titulo">Registrar pago a capital</div>
+  <div class="grid-pago">
+    <label>Fecha del pago
+      <input type="date" id="nuevaFecha" class="input-fecha">
+    </label>
+    <label>Valor abonado
+      <input type="text" inputmode="numeric" id="nuevoValor" class="input-valor" placeholder="Ej: 500.000">
+    </label>
+  </div>
+  <button class="btn-primario" id="btnAgregar">Agregar pago</button>
+</section>
+
+<section class="card oculto" id="cardHistorial">
+  <div class="card-titulo">Historial de pagos</div>
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tiempo transcurrido</th>
+          <th class="num">Debías</th>
+          <th class="num">Interés del período</th>
+          <th class="num">Abono</th>
+          <th class="num">Quedas debiendo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoTabla"></tbody>
+    </table>
+  </div>
+  <div class="totales">
+    <span>Total abonado a capital: <strong id="totalAbonado"></strong></span>
+    <span class="interes">Interés causado: <strong id="totalInteres"></strong></span>
+  </div>
+  <button class="btn-peligro" id="btnReiniciar">Reiniciar todos los pagos</button>
+</section>
+
+<section class="card">
+  <div class="card-titulo">Ajustes</div>
+  <button class="btn-secundario" id="btnAjusteBio"></button>
+  <button class="btn-peligro" id="btnCambiarClave">Desconectar esta libreta (cambiar clave)</button>
+</section>
+
+<footer>
+  <span id="pie"></span><br>
+  <span class="estado-sync" id="estadoSync"></span>
+</footer>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  initializeFirestore, persistentLocalCache,
+  doc, getDoc, setDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBeh-Gj6_A53wL5VJS88N6N87v-mj6_GCE",
+  authDomain: "prestamo-muriel.firebaseapp.com",
+  projectId: "prestamo-muriel",
+  storageBucket: "prestamo-muriel.firebasestorage.app",
+  messagingSenderId: "761006717431",
+  appId: "1:761006717431:web:8680863de098857569d6f2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, { localCache: persistentLocalCache() });
+
+// ═══════════════════════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════════════════════
+const K_HASH = "prestamo:hashClave";
+const K_CRED = "prestamo:credencialBio";
+const K_DATOS = "prestamo:datosLocales";
+
+let estado = {
+  monto: 5000000,
+  tasa: 3,
+  fechaPrestamo: hoyISO(),
+  abonos: [],
+  updatedAt: 0
+};
+let refDoc = null;
+let pararEscucha = null;
+let temporizadorGuardar = null;
+
+// ═══════════════════════════════════════════════════════════════
+// UTILIDADES
+// ═══════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function hoyISO() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+const fmtCOP = n => new Intl.NumberFormat("es-CO", { style:"currency", currency:"COP", maximumFractionDigits:0 }).format(Math.round(n));
+const parseFecha = iso => { const [a,m,d] = iso.split("-").map(Number); return new Date(a, m-1, d); };
+const fmtFecha = iso => parseFecha(iso).toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" });
+const diasEntre = (d1,d2) => Math.round((d2-d1)/86400000);
+
+function limpiarNumero(txt) {
+  const limpio = String(txt).replace(/[^\d]/g, "");
+  return limpio === "" ? 0 : parseInt(limpio, 10);
+}
+
+async function sha256Hex(texto) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+const bufABase64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const base64ABuf = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+
+// ═══════════════════════════════════════════════════════════════
+// CÁLCULO DEL PRÉSTAMO
+// ═══════════════════════════════════════════════════════════════
+function sumarMeses(fecha, n) {
+  const f = new Date(fecha);
+  const dia = f.getDate();
+  f.setMonth(f.getMonth()+n);
+  if (f.getDate() < dia) f.setDate(0);
+  return f;
+}
+
+function mesesYDias(desdeISO, hastaISO) {
+  const d1 = parseFecha(desdeISO), d2 = parseFecha(hastaISO);
+  if (d2 <= d1) return { meses: 0, dias: Math.max(0, diasEntre(d1,d2)) };
+  let meses = 0;
+  while (sumarMeses(d1, meses+1) <= d2) meses++;
+  const dias = diasEntre(sumarMeses(d1, meses), d2);
+  return { meses, dias };
+}
+
+const interesPeriodo = (saldo, tasa, meses, dias) => saldo * (tasa/100) * (meses + dias/30);
+
+function descPeriodo(meses, dias) {
+  const p = [];
+  if (meses > 0) p.push(meses === 1 ? "1 mes" : meses + " meses");
+  if (dias > 0) p.push(dias === 1 ? "1 día" : dias + " días");
+  return p.length ? p.join(" + ") : "0 días";
+}
+
+function calcular() {
+  const orden = [...estado.abonos].sort((a,b) => a.fecha.localeCompare(b.fecha));
+  let saldo = estado.monto, interesAcum = 0, fechaAnterior = estado.fechaPrestamo;
+  const filas = [];
+  orden.forEach(a => {
+    const { meses, dias } = mesesYDias(fechaAnterior, a.fecha);
+    const interes = interesPeriodo(saldo, estado.tasa, meses, dias);
+    interesAcum += interes;
+    const abono = Math.min(a.valor, saldo);
+    const saldoInicial = saldo;
+    saldo -= abono;
+    filas.push({ id:a.id, fecha:a.fecha, meses, dias, saldoInicial, interes, interesAcum, abono, saldoFinal:saldo });
+    fechaAnterior = a.fecha;
+  });
+  const hoy = hoyISO();
+  let interesHoy = 0, periodoHoy = { meses:0, dias:0 };
+  if (hoy > fechaAnterior && saldo > 0) {
+    periodoHoy = mesesYDias(fechaAnterior, hoy);
+    interesHoy = interesPeriodo(saldo, estado.tasa, periodoHoy.meses, periodoHoy.dias);
+  }
+  return { filas, saldo, interesAcum, interesHoy, periodoHoy, totalHoy: saldo + interesAcum + interesHoy };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GUARDADO: local + Firebase
+// ═══════════════════════════════════════════════════════════════
+function guardar() {
+  estado.updatedAt = Date.now();
+  try { localStorage.setItem(K_DATOS, JSON.stringify(estado)); } catch(e) {}
+  ponerEstadoSync("Guardando…", "sync-off");
+  clearTimeout(temporizadorGuardar);
+  temporizadorGuardar = setTimeout(async () => {
+    if (!refDoc) return;
+    try {
+      await setDoc(refDoc, estado);
+      ponerEstadoSync("Sincronizado ✓", "sync-ok");
+    } catch(e) {
+      ponerEstadoSync("Sin conexión — se sincroniza al volver la señal", "sync-off");
+    }
+  }, 800);
+}
+
+function cargarLocal() {
+  try {
+    const raw = localStorage.getItem(K_DATOS);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (typeof s.monto === "number") estado.monto = s.monto;
+      if (typeof s.tasa === "number") estado.tasa = s.tasa;
+      if (s.fechaPrestamo) estado.fechaPrestamo = s.fechaPrestamo;
+      if (Array.isArray(s.abonos)) estado.abonos = s.abonos;
+      if (typeof s.updatedAt === "number") estado.updatedAt = s.updatedAt;
+    }
+  } catch(e) {}
+}
+
+async function conectarFirebase(hash) {
+  refDoc = doc(db, "libretas", hash);
+  try {
+    const snap = await getDoc(refDoc);
+    if (snap.exists()) {
+      const remoto = snap.data();
+      if ((remoto.updatedAt || 0) >= (estado.updatedAt || 0)) {
+        aplicarRemoto(remoto);
+      } else {
+        await setDoc(refDoc, estado);
+      }
+    } else {
+      await setDoc(refDoc, estado);
+    }
+    ponerEstadoSync("Sincronizado ✓", "sync-ok");
+  } catch(e) {
+    ponerEstadoSync("Sin conexión — trabajando con datos locales", "sync-off");
+  }
+  if (pararEscucha) pararEscucha();
+  pararEscucha = onSnapshot(refDoc, (snap) => {
+    if (!snap.exists() || snap.metadata.hasPendingWrites) return;
+    const remoto = snap.data();
+    if ((remoto.updatedAt || 0) > (estado.updatedAt || 0)) {
+      aplicarRemoto(remoto);
+      ponerEstadoSync("Sincronizado ✓", "sync-ok");
+    }
+  }, () => {
+    ponerEstadoSync("Sin conexión — trabajando con datos locales", "sync-off");
+  });
+}
+
+function aplicarRemoto(remoto) {
+  estado = {
+    monto: typeof remoto.monto === "number" ? remoto.monto : estado.monto,
+    tasa: typeof remoto.tasa === "number" ? remoto.tasa : estado.tasa,
+    fechaPrestamo: remoto.fechaPrestamo || estado.fechaPrestamo,
+    abonos: Array.isArray(remoto.abonos) ? remoto.abonos : estado.abonos,
+    updatedAt: remoto.updatedAt || 0
+  };
+  try { localStorage.setItem(K_DATOS, JSON.stringify(estado)); } catch(e) {}
+  llenarInputs();
+  render();
+}
+
+function ponerEstadoSync(texto, clase) {
+  const el = $("estadoSync");
+  el.textContent = texto;
+  el.className = "estado-sync " + clase;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BIOMETRÍA (Face ID / huella con WebAuthn)
+// ═══════════════════════════════════════════════════════════════
+function bioDisponible() {
+  return !!(window.PublicKeyCredential && navigator.credentials);
+}
+
+async function registrarBiometria() {
+  const cred = await navigator.credentials.create({
+    publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: "Libreta de Préstamo" },
+      user: {
+        id: crypto.getRandomValues(new Uint8Array(16)),
+        name: "libreta-prestamo",
+        displayName: "Libreta de Préstamo"
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: "public-key" },
+        { alg: -257, type: "public-key" }
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required"
+      },
+      timeout: 60000
+    }
+  });
+  localStorage.setItem(K_CRED, bufABase64(cred.rawId));
+}
+
+async function verificarBiometria() {
+  const credId = localStorage.getItem(K_CRED);
+  if (!credId) throw new Error("sin credencial");
+  await navigator.credentials.get({
+    publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ id: base64ABuf(credId), type: "public-key" }],
+      userVerification: "required",
+      timeout: 60000
+    }
+  });
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FLUJO DE PANTALLAS
+// ═══════════════════════════════════════════════════════════════
+function mostrarSolo(idPantalla) {
+  ["pantallaClave", "pantallaOfrecerBio", "pantallaBloqueo"].forEach(id => {
+    $(id).classList.toggle("oculto", id !== idPantalla);
+  });
+}
+function ocultarPantallas() { mostrarSolo(null); }
+
+async function flujoInicial() {
+  const hash = localStorage.getItem(K_HASH);
+  if (!hash) {
+    mostrarSolo("pantallaClave");
+    return;
+  }
+  if (localStorage.getItem(K_CRED)) {
+    mostrarSolo("pantallaBloqueo");
+  } else {
+    ocultarPantallas();
+    await conectarFirebase(hash);
+  }
+}
+
+// Pantalla 1: conectar con la clave
+$("btnConectar").addEventListener("click", async () => {
+  const clave = $("inputClave").value.trim();
+  if (clave.length < 8) {
+    $("errorClave").textContent = "La clave debe tener mínimo 8 caracteres.";
+    return;
+  }
+  $("errorClave").textContent = "";
+  const hash = await sha256Hex(clave);
+  localStorage.setItem(K_HASH, hash);
+  $("inputClave").value = "";
+  if (bioDisponible()) {
+    mostrarSolo("pantallaOfrecerBio");
+  } else {
+    ocultarPantallas();
+  }
+  await conectarFirebase(hash);
+  actualizarBtnAjusteBio();
+});
+
+// Pantalla 2: activar o saltar biometría
+$("btnActivarBio").addEventListener("click", async () => {
+  try {
+    await registrarBiometria();
+    ocultarPantallas();
+    actualizarBtnAjusteBio();
+  } catch(e) {
+    $("errorBio").textContent = "No se pudo registrar. Puedes intentarlo luego desde Ajustes.";
+  }
+});
+$("btnSaltarBio").addEventListener("click", () => {
+  ocultarPantallas();
+  actualizarBtnAjusteBio();
+});
+
+// Pantalla 3: desbloquear
+$("btnDesbloquear").addEventListener("click", async () => {
+  try {
+    await verificarBiometria();
+    ocultarPantallas();
+    const hash = localStorage.getItem(K_HASH);
+    await conectarFirebase(hash);
+  } catch(e) {
+    $("errorBloqueo").textContent = "No se pudo verificar. Intenta de nuevo o usa la clave.";
+  }
+});
+$("btnUsarClave").addEventListener("click", () => {
+  $("inputClaveDesbloqueo").classList.remove("oculto");
+  $("inputClaveDesbloqueo").focus();
+});
+$("inputClaveDesbloqueo").addEventListener("keydown", async (e) => {
+  if (e.key !== "Enter") return;
+  const hash = await sha256Hex($("inputClaveDesbloqueo").value.trim());
+  if (hash === localStorage.getItem(K_HASH)) {
+    $("inputClaveDesbloqueo").value = "";
+    $("errorBloqueo").textContent = "";
+    ocultarPantallas();
+    await conectarFirebase(hash);
+  } else {
+    $("errorBloqueo").textContent = "Clave incorrecta.";
+  }
+});
+
+// Ajustes
+function actualizarBtnAjusteBio() {
+  const btn = $("btnAjusteBio");
+  if (!bioDisponible()) {
+    btn.textContent = "Face ID / huella no disponible en este navegador";
+    btn.disabled = true;
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = localStorage.getItem(K_CRED)
+    ? "Desactivar bloqueo con Face ID / huella"
+    : "Activar bloqueo con Face ID / huella";
+}
+$("btnAjusteBio").addEventListener("click", async () => {
+  if (localStorage.getItem(K_CRED)) {
+    localStorage.removeItem(K_CRED);
+  } else {
+    try { await registrarBiometria(); }
+    catch(e) { alert("No se pudo registrar la biometría."); }
+  }
+  actualizarBtnAjusteBio();
+});
+$("btnCambiarClave").addEventListener("click", () => {
+  if (confirm("¿Desconectar esta libreta de este celular? Los datos en la nube NO se borran; podrás volver a entrar con la misma clave.")) {
+    localStorage.removeItem(K_HASH);
+    localStorage.removeItem(K_CRED);
+    localStorage.removeItem(K_DATOS);
+    location.reload();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  const r = calcular();
+  $("subtitulo").textContent = "Cada mes completo genera el " + estado.tasa + "%. Los días de más (o de menos) se cobran proporcionalmente: " + estado.tasa + "% ÷ 30 por cada día.";
+  $("capitalPendiente").textContent = fmtCOP(r.saldo);
+  $("interesCausado").textContent = fmtCOP(r.interesAcum);
+  $("totalHoy").textContent = fmtCOP(r.totalHoy);
+  $("notaHoy").textContent = r.interesHoy > 0
+    ? "incluye " + fmtCOP(r.interesHoy) + " de interés corriendo desde tu último pago (" + descPeriodo(r.periodoHoy.meses, r.periodoHoy.dias) + ")"
+    : "capital + intereses acumulados";
+
+  const cuerpo = $("cuerpoTabla");
+  cuerpo.innerHTML = "";
+  if (r.filas.length === 0) {
+    $("cardHistorial").classList.add("oculto");
+  } else {
+    $("cardHistorial").classList.remove("oculto");
+    r.filas.forEach(f => {
+      const abonoObj = estado.abonos.find(a => a.id === f.id);
+      const tr = document.createElement("tr");
+
+      const tdFecha = document.createElement("td");
+      const inF = document.createElement("input");
+      inF.type = "date"; inF.value = f.fecha; inF.className = "input-fecha-tabla";
+      inF.addEventListener("change", () => { abonoObj.fecha = inF.value; guardar(); render(); });
+      tdFecha.appendChild(inF);
+
+      const tdPeriodo = document.createElement("td");
+      tdPeriodo.className = "periodo";
+      tdPeriodo.textContent = descPeriodo(f.meses, f.dias);
+
+      const tdDebias = document.createElement("td");
+      tdDebias.className = "num"; tdDebias.textContent = fmtCOP(f.saldoInicial);
+
+      const tdInteres = document.createElement("td");
+      tdInteres.className = "num interes"; tdInteres.textContent = "+" + fmtCOP(f.interes);
+
+      const tdAbono = document.createElement("td");
+      tdAbono.className = "num";
+      const inV = document.createElement("input");
+      inV.type = "text"; inV.inputMode = "numeric"; inV.className = "input-tabla";
+      inV.value = abonoObj.valor.toLocaleString("es-CO");
+      inV.addEventListener("change", () => { abonoObj.valor = limpiarNumero(inV.value); guardar(); render(); });
+      tdAbono.appendChild(inV);
+
+      const tdSaldo = document.createElement("td");
+      tdSaldo.className = "num fuerte"; tdSaldo.textContent = fmtCOP(f.saldoFinal);
+
+      const tdX = document.createElement("td");
+      const btnX = document.createElement("button");
+      btnX.className = "btn-borrar"; btnX.textContent = "✕";
+      btnX.setAttribute("aria-label", "Eliminar pago del " + fmtFecha(f.fecha));
+      btnX.addEventListener("click", () => {
+        estado.abonos = estado.abonos.filter(a => a.id !== f.id);
+        guardar(); render();
+      });
+      tdX.appendChild(btnX);
+
+      tr.append(tdFecha, tdPeriodo, tdDebias, tdInteres, tdAbono, tdSaldo, tdX);
+      cuerpo.appendChild(tr);
+    });
+    $("totalAbonado").textContent = fmtCOP(estado.abonos.reduce((s,a) => s + a.valor, 0));
+    $("totalInteres").textContent = fmtCOP(r.interesAcum);
+  }
+  $("pie").textContent = "Préstamo del " + fmtFecha(estado.fechaPrestamo) + " · Sincronizado en la nube entre tus celulares.";
+}
+
+function llenarInputs() {
+  $("monto").value = estado.monto.toLocaleString("es-CO");
+  $("tasa").value = estado.tasa;
+  $("fechaPrestamo").value = estado.fechaPrestamo;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EVENTOS DE LA CALCULADORA
+// ═══════════════════════════════════════════════════════════════
+function agregarPago() {
+  const v = limpiarNumero($("nuevoValor").value);
+  const f = $("nuevaFecha").value;
+  if (!f || v < 0) return;
+  estado.abonos.push({ id: Date.now(), fecha: f, valor: v });
+  $("nuevoValor").value = "";
+  guardar(); render();
+}
+
+$("monto").addEventListener("input", e => {
+  estado.monto = limpiarNumero(e.target.value);
+  e.target.value = estado.monto ? estado.monto.toLocaleString("es-CO") : "";
+  guardar(); render();
+});
+$("tasa").addEventListener("input", e => {
+  estado.tasa = parseFloat(e.target.value) || 0;
+  guardar(); render();
+});
+$("fechaPrestamo").addEventListener("change", e => {
+  estado.fechaPrestamo = e.target.value;
+  guardar(); render();
+});
+$("nuevoValor").addEventListener("input", e => {
+  const v = limpiarNumero(e.target.value);
+  e.target.value = v ? v.toLocaleString("es-CO") : "";
+});
+$("nuevoValor").addEventListener("keydown", e => { if (e.key === "Enter") agregarPago(); });
+$("btnAgregar").addEventListener("click", agregarPago);
+$("btnReiniciar").addEventListener("click", () => {
+  if (confirm("¿Borrar todos los abonos y empezar de nuevo? (Se borran también en el otro celular)")) {
+    estado.abonos = [];
+    guardar(); render();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ARRANQUE
+// ═══════════════════════════════════════════════════════════════
+cargarLocal();
+llenarInputs();
+$("nuevaFecha").value = hoyISO();
+render();
+actualizarBtnAjusteBio();
+flujoInicial();
+
+// PWA: service worker (falla en silencio en navegadores embebidos)
+if ("serviceWorker" in navigator &&
+    (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
